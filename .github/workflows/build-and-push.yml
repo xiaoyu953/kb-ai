@@ -6,17 +6,20 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: frank953/kb-ai
+  IMAGE_NAME: frank953/kb-ai  # ← 替换为你的 Docker Hub 用户名/仓库名
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up QEMU (for multi-arch, optional)
+      - name: Set up QEMU (multi-arch, optional)
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -42,7 +45,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/app/Dockerfile  # ← 必须指定路径！
+          file: ./docker/app/Dockerfile    # ← 关键！指定路径
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
