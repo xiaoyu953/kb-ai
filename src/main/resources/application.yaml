@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: heima-ai
+
+  # 允许跨域（关键！）
+  cors:
+    allowed-origins: "*"
+
+  # 🔌 对接 DeepSeek 官方 API（仅用于聊天）
+  ai:
+    openai:
+      api-key: ${DEEPSEEK_API_KEY:sk-8023757f6fcd4c35886ba83e2bacb4d6}
+      base-url: https://api.deepseek.com  # ⚠️ 注意：加 /v1
+      chat:
+        options:
+          model: deepseek-chat
+      embedding:
+        enabled: false
+
+    # ✅ 只保留 Ollama Embedding（彻底删除 transformers 配置！）
+    ollama:
+      base-url: http://host.docker.internal:11434
+      embedding:
+        enabled: true
+        options:
+          model: mxbai-embed-large
+
+    # 🗃️ 向量库配置（自动使用上面的 Ollama embedding）
+    vectorstore:
+      qdrant:
+        host: ${QDRANT_HOST:qdrant}
+        port: ${QDRANT_GRPC_PORT:6334}
+        collection-name: heima_rag
+        initialize-schema: true
+        embedding-model: ollama   # ←←← 就加这一行
+
+  # 🗃️ Redis 配置
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+server:
+  port: 8088
+
+# 自定义配置
+rag:
+  cache:
+    expire-hours: 1
+
+tool:
+  rate-limit:
+    window-minutes: 1
+    max-calls: 5
+
+logging:
+  level:
+    org.springframework.ai: debug
+    com.itheima.ai: debug
+    io.qdrant.client: warn
