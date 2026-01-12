@@ -3,8 +3,8 @@ version: '3.8'
 services:
   app:
     build:
-      context: .
-      dockerfile: docker/app/Dockerfile
+      context: .           # 当前项目根目录
+      dockerfile: docker/app/Dockerfile  # 指定完整路径
     ports:
       - "8088:8088"
     environment:
