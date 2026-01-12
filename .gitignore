@@ -1,0 +1,127 @@
+# ========================
+# 1. 本地 AI 模型文件（重点！）
+# ========================
+src/main/resources/models/
+src/main/resources/model/
+*.bin
+*.safetensors
+*.onnx
+*.pt
+*.ckpt
+
+# ========================
+# 2. 构建产物（Maven / Gradle）
+# ========================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.tgz
+*.log
+*.tmp
+*.lock
+*.iml
+
+# ========================
+# 3. IDE 和编辑器文件
+# ========================
+.idea/
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# ========================
+# 4. Docker 相关
+# ========================
+docker-compose.override.yml
+docker-compose.local.yml
+qdrant_data/
+uploads/
+
+# ========================
+# 5. 运行时数据和缓存
+# ========================
+*.log
+app.log
+chat-history.json
+chat-memory.json
+*.tmp
+*.cache
+*.temp
+
+# ========================
+# 6. 环境变量和敏感信息
+# ========================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# ========================
+# 7. 其他临时文件
+# ========================
+*.pid
+*.lock
+*.swp
+*.swo
+*.tmp
+*.tmp.*
+*.bak
+*.backup
+
+# ========================
+# 8. Node.js / npm（如果有前端）
+# ========================
+node_modules/
+package-lock.json
+
+# ========================
+# 9. Python 虚拟环境（如果有的话）
+# ========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyi
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ========================
+# 10. 其他常见忽略项
+# ========================
+*.classpath
+*.project
+*.settings/
+*.classpath
+*.launch
+*.properties
+*.local
+*.jar
+*.war
+*.ear
+*.zip
+*.gz
+*.bz2
+*.xz
+*.7z
+
+# ========================
+# 11. 自定义忽略
+# ========================
+a
+liucheng.md
+liucheng2.md
+docker-compose-lobechat.yml

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <title>AI 流式聊天</title>
+    <style>
+        #output {
+            white-space: pre-wrap;
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding: 10px;
+            border: 1px solid #ccc;
+            height: 300px;
+            overflow-y: auto;
+            background: #f9f9f9;
+        }
+        input, button {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover { background: #45a049; }
+        button:disabled { background: #cccccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<h2>AI 流式聊天</h2>
+<input type="text" id="prompt" placeholder="输入问题..." value="你好！" />
+<input type="text" id="chatId" placeholder="会话ID" value="session_123" />
+<button id="sendBtn" onclick="sendChat()">发送</button>
+<br/>
+<div id="output"></div>
+
+<script>
+    function sendChat() {
+        const prompt = document.getElementById('prompt').value.trim();
+        const chatId = document.getElementById('chatId').value.trim();
+        const outputDiv = document.getElementById('output');
+        const sendBtn = document.getElementById('sendBtn');
+
+        if (!prompt || !chatId) {
+            alert("请输入问题和会话ID");
+            return;
+        }
+
+        outputDiv.innerText = '';
+        sendBtn.disabled = true;
+        sendBtn.textContent = '发送中...';
+
+        const requestBody = {
+            prompt: prompt,
+            chatId: chatId,
+            files: []
+        };
+
+        fetch('/rag/stream-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        })
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = '';
+
+                function read() {
+                    return reader.read().then(({ done, value }) => {
+                        if (done) {
+                            sendBtn.disabled = false;
+                            sendBtn.textContent = '发送';
+                            return;
+                        }
+                        const chunk = decoder.decode(value, { stream: true });
+                        fullText += chunk;
+                        outputDiv.innerText = fullText;
+                        return read();
+                    });
+                }
+                return read();
+            })
+            .catch(err => {
+                console.error("请求失败:", err);
+                outputDiv.innerText = "❌ 错误：" + err.message;
+                sendBtn.disabled = false;
+                sendBtn.textContent = '发送';
+            });
+    }
+</script>
+
+</body>
+</html>
