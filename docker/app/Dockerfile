@@ -1,5 +1,5 @@
-# 完美适配ARM64(Apple M3) + AMD64(云服务器)，阿里国内镜像源，拉取超快，彻底解决架构报错
-FROM registry.aliyuncs.com/ibyte/java:17-jre-alpine
+# 官方公共镜像 + 无需权限 + 原生支持ARM64/AMD64双架构 + 国内可拉取 + 体积小(90MB)
+FROM bellsoft/liberica-openjdk:17-alpine
 WORKDIR /app
 COPY ./target/heima-ai.jar ./app.jar
 EXPOSE 8088
