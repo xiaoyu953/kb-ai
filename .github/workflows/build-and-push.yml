@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: frank953/kb-ai  # 你的DockerHub地址，不用改
+  IMAGE_NAME: frank953/kb-ai
 
 jobs:
   build-and-push:
@@ -20,11 +20,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: docker/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven  # 缓存Maven依赖，打包提速，保留
+          cache: maven
 
       - name: Build JAR with Maven
         run: mvn clean package -DskipTests -Dmaven.javadoc.skip=true
@@ -58,8 +58,8 @@ jobs:
         with:
           context: .
           file: ./docker/app/Dockerfile
-          platforms: linux/amd64,linux/arm64  # 保留双架构，适配M3+服务器
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          allow: [pull]  # ✅✅✅ 新增这一行！根治所有pull access denied/权限不足报错 ✅✅✅
+          allow: pull  # ✅✅✅ 语法修复！去掉[]，改成纯字符串，完美解决报错 ✅✅✅
