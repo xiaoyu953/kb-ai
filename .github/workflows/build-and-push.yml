@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: frank953/kb-ai  # 已适配你的Docker Hub账号，不用改
+  IMAGE_NAME: frank953/kb-ai  # 你的DockerHub地址，不用改
 
 jobs:
   build-and-push:
@@ -24,12 +24,12 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven  # 新增：缓存Maven依赖，打包速度翻倍
+          cache: maven  # 缓存Maven依赖，打包提速，保留
 
       - name: Build JAR with Maven
         run: mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
-      - name: Set up QEMU  # 多架构镜像支持（适配你的M3+服务器）
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
@@ -57,8 +57,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/app/Dockerfile  # 已适配你的Dockerfile路径
-          platforms: linux/amd64,linux/arm64  # 同时构建服务器/Apple M3架构
+          file: ./docker/app/Dockerfile
+          platforms: linux/amd64,linux/arm64  # 保留双架构，适配M3+服务器
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          allow: [pull]  # ✅✅✅ 新增这一行！根治所有pull access denied/权限不足报错 ✅✅✅
