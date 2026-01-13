@@ -20,7 +20,7 @@ public class ToolCallRequest {
      * 例如："queryOrder"
      */
     @JsonProperty("tool")
-    private String toolName;
+    private String tool;
 
     /**
      * 工具所需的参数对象。

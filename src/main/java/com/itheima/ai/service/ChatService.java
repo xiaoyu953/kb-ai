@@ -28,7 +28,7 @@ public class ChatService {
     private final ChatClient chatClient;
     private final ToolRegistry toolRegistry;
     private final AuthService authService;
-    private final RagService ragService;
+    private final RagChatService ragService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final JsonSchemaValidator schemaValidator; // ✅ 名称与你 Controller 一致！
 
@@ -50,7 +50,7 @@ public class ChatService {
             if (rawOutput.startsWith("{") || rawOutput.startsWith("[")) {
                 try {
                     ToolCallRequest req = parseToolCall(rawOutput);
-                    if (req != null && isValidToolName(req.getToolName())) {
+                    if (req != null && isValidToolName(req.getTool())) {
                         return executeTool(req, chatId);
                     }
                 } catch (Exception e) {
@@ -96,14 +96,14 @@ public class ChatService {
     }
 
     private String executeTool(ToolCallRequest req, String chatId) throws Exception {
-        ToolDefinition toolDef = toolRegistry.getTool(req.getToolName());
+        ToolDefinition toolDef = toolRegistry.getTool(req.getTool());
 
         // Schema 校验
-        String validationInput = req.toString(); // 或保留原始 rawOutput 更安全
+        String validationInput = objectMapper.writeValueAsString(req);
         schemaValidator.validate(validationInput, toolDef.jsonSchema());
 
         // 限流
-        String rateKey = "tool:rate:" + chatId + ":" + req.getToolName();
+        String rateKey = "tool:rate:" + chatId + ":" + req.getTool();
         Long count = (Long) redisTemplate.opsForValue().increment(rateKey);
         if (count == null) count = 1L;
         if (count == 1) {

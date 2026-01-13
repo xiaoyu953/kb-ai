@@ -1,10 +1,8 @@
-version: '3.8'
-
+# 去掉version也可以，消除警告，不影响运行
 services:
   app:
-    build:
-      context: .           # 当前项目根目录
-      dockerfile: docker/app/Dockerfile  # 指定完整路径
+    # ✅ 核心修改：不再本地build，而是从Docker Hub拉取你自动构建的镜像
+    image: frank953/kb-ai:latest
     ports:
       - "8088:8088"
     environment:
@@ -33,3 +31,5 @@ services:
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes
+    volumes:
+      - ./redis_data:/data

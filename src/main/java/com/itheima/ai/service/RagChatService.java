@@ -4,6 +4,7 @@ package com.itheima.ai.service;
 
 import com.itheima.ai.entity.dto.RagResponse;
 import com.itheima.ai.utils.CacheKeyUtils;
+import com.itheima.ai.utils.DocumentUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
@@ -90,7 +91,7 @@ public class RagChatService {
 
             // 安全提取页码（兼容 Integer / Long / String 类型）
             Object pageObj = doc.getMetadata().get("page");
-            int page = extractPageNumber(pageObj); // 工具方法处理类型转换
+            int page = DocumentUtils.extractPageNumber(pageObj); // 使用工具类方法处理类型转换
 
             // 构造带编号的上下文片段，例如：[1] 这是内容...
             contextBuilder.append(String.format("[%d] %s\n", i + 1, content.trim()));
@@ -173,24 +174,5 @@ public class RagChatService {
         return finalResponse;
     }
 
-    /**
-     * 安全提取页码数字（处理不同类型的 metadata 值）
-     *
-     * @param pageObj 可能是 Integer / Long / String
-     * @return 有效页码，失败时默认返回 1
-     */
-    private int extractPageNumber(Object pageObj) {
-        if (pageObj == null) return 1;
-        if (pageObj instanceof Number) {
-            return ((Number) pageObj).intValue();
-        }
-        if (pageObj instanceof String) {
-            try {
-                return Integer.parseInt((String) pageObj);
-            } catch (NumberFormatException ignored) {
-                // 解析失败，返回默认值
-            }
-        }
-        return 1; // 默认第 1 页
-    }
+
 }

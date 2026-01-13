@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/ai")
-public class AiController {
+@RequestMapping("/agent")
+public class AgentController {
 
-    private static final Logger log = LoggerFactory.getLogger(AiController.class);
+    private static final Logger log = LoggerFactory.getLogger(AgentController.class);
 
     private final ChatService chatService;
 
