@@ -1,35 +1,50 @@
-# 去掉version也可以，消除警告，不影响运行
+# 可以去掉version: '3.8'，消除警告，不影响运行，所以这里直接写services就行
 services:
+  # 第一个服务：你的Java项目（核心服务）
   app:
-    # ✅ 核心修改：不再本地build，而是从Docker Hub拉取你自动构建的镜像
+    # ✅ 核心！这里是「用哪个镜像启动」：从你的Docker Hub仓库拉取你自动构建的镜像（就是你推上去的frank953/kb-ai:latest）
     image: frank953/kb-ai:latest
+    # ✅ 端口映射：把你电脑的8088端口，和容器里的8088端口绑定，你浏览器访问localhost:8088就能进项目
     ports:
       - "8088:8088"
+    # ✅ 配置项目需要的环境变量：比如你的AI密钥、数据库地址，这些是项目运行需要的参数
     environment:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
       QDRANT_HOST: qdrant
       QDRANT_GRPC_PORT: 6334
       REDIS_HOST: redis
+    # ✅ 启动顺序：先启动Qdrant和Redis，再启动你的Java项目，避免项目启动时数据库还没准备好
     depends_on:
       - qdrant
       - redis
+    # ✅ 数据持久化：把你电脑的uploads文件夹，和容器里的uploads文件夹绑定，项目上传的文件会保存在本地，不会丢
     volumes:
       - ./uploads:/app/uploads
+    # ✅ 兼容本地开发：让容器能访问你电脑的本地服务，不用改配置
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  # 第二个服务：Qdrant向量数据库
   qdrant:
+    # ✅ 用官方最新版的Qdrant镜像，自动联网下载
     image: qdrant/qdrant:latest
+    # ✅ 端口映射：数据库的访问端口
     ports:
       - "6333:6333"
       - "6334:6334"
+    # ✅ 数据持久化：数据库的数据保存在本地qdrant_data文件夹，重启项目数据不丢
     volumes:
       - ./qdrant_data:/qdrant/storage
 
+  # 第三个服务：Redis缓存数据库
   redis:
+    # ✅ 用官方轻量版的Redis镜像，体积小，速度快，自动联网下载
     image: redis:7-alpine
+    # ✅ 端口映射：缓存的访问端口
     ports:
       - "6379:6379"
+    # ✅ 启动命令：让Redis重启后数据不丢（持久化）
     command: redis-server --appendonly yes
+    # ✅ 数据持久化：Redis的数据保存在本地redis_data文件夹，重启不丢
     volumes:
       - ./redis_data:/data

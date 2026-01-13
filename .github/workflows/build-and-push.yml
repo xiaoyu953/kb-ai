@@ -1,24 +1,32 @@
+# 给这个自动化任务起个名字：构建并推送Docker镜像
 name: Build and Push Docker Image
 
+# ✅ 触发条件：当你把代码「推送到GitHub的main分支」时，自动执行下面所有步骤
 on:
   push:
     branches: [ main ]
 
+# ✅ 全局变量：你的Docker Hub仓库地址，不用改，固定写死
 env:
   REGISTRY: docker.io
   IMAGE_NAME: frank953/kb-ai
 
+# ✅ 要执行的任务：就一个任务，叫build-and-push
 jobs:
   build-and-push:
+    # ✅ 任务运行的环境：GitHub免费提供的Ubuntu服务器（和你的电脑没关系）
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
+    # ✅ 下面是「任务的具体步骤」，按顺序执行，一步不差，全部是GitHub自动做！
     steps:
+      # 步骤1：拉取你刚推送的最新代码 → GitHub服务器把你推上去的代码，拉到自己的服务器上
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 步骤2：配置Java17环境 → GitHub服务器上安装Java17，和你本地的开发环境一样
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -26,23 +34,28 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      # 步骤3：自动打包Jar包 → GitHub服务器上执行mvn打包命令，生成你的项目jar包（和你本地打包的一样）
       - name: Build JAR with Maven
         run: mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
+      # 步骤4：配置跨架构编译工具 → 为了能同时构建AMD64和ARM64两个版本的镜像，必须的工具
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
 
+      # 步骤5：初始化Docker构建工具 → GitHub服务器上安装并启动Docker，准备构建镜像
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # 步骤6：自动登录你的Docker Hub账号 → 用你在GitHub配置的秘钥（用户名+密码），安全登录，不会泄露你的账号信息
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # 步骤7：自动生成镜像标签 → 给你的镜像打上「latest（最新版）、分支名、版本号」标签，方便区分版本
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -53,12 +66,13 @@ jobs:
             type=sha,prefix={{branch}}-
             latest
 
+      # 步骤8：【核心步骤】自动构建双架构镜像 + 自动推送到Docker Hub → 最终一步！
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/app/Dockerfile
-          platforms: linux/amd64,linux/arm64  # ✅ 双架构完美兼容所有人
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          file: ./docker/app/Dockerfile  # 用你写的Dockerfile配方单造镜像
+          platforms: linux/amd64,linux/arm64  # 同时造两个版本的镜像，兼顾所有人
+          push: true  # 造完镜像后，自动推送到你的Docker Hub仓库
+          tags: ${{ steps.meta.outputs.tags }}  # 用上面生成的标签
           labels: ${{ steps.meta.outputs.labels }}
