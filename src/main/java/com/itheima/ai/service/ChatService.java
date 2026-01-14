@@ -69,30 +69,30 @@ public class ChatService {
 
     private String buildDecisionPrompt(String prompt) {
         return """
-            你是一个路由助手，请严格按以下规则响应：
+                你是一个路由助手，请严格按以下规则响应：
 
-            可用工具：
-            - queryOrder: 查询订单状态（参数: {"orderId": "原始订单号"})
+                可用工具：
+                - queryOrder: 查询订单状态（参数: {"orderId": "原始订单号，如OP12345、12345、订单12345"})
 
-            规则：
-            1. 仅当用户问题中包含**可识别的5位数字订单编号**时，才输出工具调用 JSON。
-               - 合法示例：OP12345、op67890、12345、订单12345 → 提取纯数字部分 "12345"
-               - 非法示例：123、1234、123456、abc、无数字内容 → 不调用工具！
+                规则：
+                1. 只要用户问题中**包含订单相关关键词+任意数字**（如订单、OP、单号、查单），无论数字是几位，都必须输出工具调用 JSON。
+                   - 示例：OP1234、OP12345、1234、12345、订单1234、查单OP67890 → 全部调用工具
+                   - 提取规则：把用户问题中的「原始订单内容」原样传入orderId，不要做任何清洗/删减，例如用户写OP1234就传OP1234
 
-            2. 其他所有情况（包括提到“订单”但无有效编号、问报销、年假、打卡等），
-               → **禁止输出任何中文！禁止回答问题！**
-               → 必须输出空 JSON 对象：{}
+                2. 其他所有情况（问报销、年假、打卡、规章制度、无数字无订单关键词），
+                   → **禁止输出任何中文！禁止回答问题！**
+                   → 必须输出空 JSON 对象：{}
 
-            3. 输出必须是合法 JSON，且仅包含以下两种形式之一：
-               - {"tool": "queryOrder", "params": {"orderId": "12345"}}
-               - {}
+                3. 输出必须是合法 JSON，且仅包含以下两种形式之一，无任何多余内容：
+                   - {"tool": "queryOrder", "params": {"orderId": "用户输入的原始订单内容"}}
+                   - {}
 
-            用户问题：%s
-            """.formatted(prompt);
+                用户问题：%s
+                """.formatted(prompt);
     }
 
     private boolean isValidToolName(String toolName) {
-        return toolName != null && !toolName.trim().isEmpty();
+        return toolName != null && !toolName.trim().isEmpty() && toolRegistry.getTool(toolName) != null;
     }
 
     private String executeTool(ToolCallRequest req, String chatId) throws Exception {
@@ -130,6 +130,10 @@ public class ChatService {
     // 👇 完全复用你 Controller 中的逻辑
     private ToolCallRequest parseToolCall(String raw) throws Exception {
         if (raw == null || raw.trim().isEmpty()) {
+            return null;
+        }
+        // 新增：判断是否是空JSON对象
+        if ("{}".equals(raw.trim())) {
             return null;
         }
         if (raw.startsWith("[")) {
